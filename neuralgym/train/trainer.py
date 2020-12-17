@@ -119,7 +119,7 @@ class Trainer(object):
                 cb.run(sess)
         try:
             while step < max_iters:
-                print("Step: ", step)
+                #print("Step: ", step)
                 # update and get current step
                 step += 1
                 if global_step_add_one is not None:
