@@ -39,7 +39,7 @@ class Trainer(object):
         else:
             self._loss = self.context.pop('loss', 0)
         # global step
-        self.context['log_progress'] = self.context.pop('log_progress', True)
+        self.context['log_progress'] = True #self.context.pop('log_progress', True)
         if self.context['log_progress']:
             self._bar = ProgressBar()
         # total loss, beginning timepoint
@@ -119,6 +119,7 @@ class Trainer(object):
                 cb.run(sess)
         try:
             while step < max_iters:
+                print("Step: ", step)
                 # update and get current step
                 step += 1
                 if global_step_add_one is not None:
