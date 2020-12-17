@@ -3,7 +3,7 @@ import logging
 
 import numpy as np
 import tensorflow as tf
-
+from tensorflow.python.client import timeline
 from ..utils.logger import ProgressBar
 from ..callbacks import CallbackLoc
 from ..callbacks import PeriodicCallback, OnceCallback, ScheduledCallback
@@ -106,12 +106,15 @@ class Trainer(object):
         """
         sess = self.context['sess']
         max_iters = self.context['max_iters']
+        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        run_metadata = tf.RunMetadata()
+
         self.update_callbacks()
         if self.context.get('global_step') is None:
             step = 0
             global_step_add_one = None
         else:
-            step = sess.run(self.context['global_step'])
+            step = sess.run(self.context['global_step'], options=run_options, run_metadata=run_metadata)
             global_step_add_one = self.context['global_step_add_one']
         # once_callbacks at train start
         for cb in self._once_callbacks:
@@ -123,7 +126,7 @@ class Trainer(object):
                 # update and get current step
                 step += 1
                 if global_step_add_one is not None:
-                    sess.run(global_step_add_one)
+                    sess.run(global_step_add_one, options=run_options, run_metadata=run_metadata)
                 # periodic callbacks at step start
                 for cb in self._periodic_callbacks:
                     if (cb.cb_loc == CallbackLoc.step_start and
@@ -136,7 +139,7 @@ class Trainer(object):
                         cb.run(sess, step)
                 # run train op
                 _, loss_value = sess.run([self._train_op, self._loss],
-                                         feed_dict=self.context['feed_dict'])
+                                         feed_dict=self.context['feed_dict'], options=run_options, run_metadata=run_metadata)
                 # if nan, exist
                 assert not np.isnan(loss_value)
                 # log one
@@ -152,6 +155,10 @@ class Trainer(object):
                     if (cb.cb_loc == CallbackLoc.step_end and
                             step in cb.schedule):
                         cb.run(sess, step)
+                        tl = timeline.Timeline(run_metadata.step_stats)
+                ctf = tl.generate_chrome_trace_format()
+                with open('timeline.json', 'w') as f:
+                    f.write(ctf)
         except (KeyboardInterrupt, SystemExit):
             print("Training is stoped.")
         except:
