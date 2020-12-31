@@ -155,10 +155,10 @@ class Trainer(object):
                     if (cb.cb_loc == CallbackLoc.step_end and
                             step in cb.schedule):
                         cb.run(sess, step)
-                tl = timeline.Timeline(run_metadata.step_stats)
-                ctf = tl.generate_chrome_trace_format()
-                with open('timeline.json', 'w') as f:
-                    f.write(ctf)
+#                 tl = timeline.Timeline(run_metadata.step_stats)
+#                 ctf = tl.generate_chrome_trace_format()
+#                 with open('timeline.json', 'w') as f:
+#                     f.write(ctf)
         except (KeyboardInterrupt, SystemExit):
             print("Training is stoped.")
         except:
