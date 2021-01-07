@@ -106,15 +106,16 @@ class Trainer(object):
         """
         sess = self.context['sess']
         max_iters = self.context['max_iters']
-        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-        run_metadata = tf.RunMetadata()
+#         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+#         run_metadata = tf.RunMetadata()
 
         self.update_callbacks()
         if self.context.get('global_step') is None:
             step = 0
             global_step_add_one = None
         else:
-            step = sess.run(self.context['global_step'], options=run_options, run_metadata=run_metadata)
+#             step = sess.run(self.context['global_step'], options=run_options, run_metadata=run_metadata)
+            step = sess.run(self.context['global_step'])
             global_step_add_one = self.context['global_step_add_one']
         # once_callbacks at train start
         for cb in self._once_callbacks:
@@ -126,7 +127,8 @@ class Trainer(object):
                 # update and get current step
                 step += 1
                 if global_step_add_one is not None:
-                    sess.run(global_step_add_one, options=run_options, run_metadata=run_metadata)
+#                     sess.run(global_step_add_one, options=run_options, run_metadata=run_metadata)
+                    sess.run(global_step_add_one)
                 # periodic callbacks at step start
                 for cb in self._periodic_callbacks:
                     if (cb.cb_loc == CallbackLoc.step_start and
@@ -138,8 +140,10 @@ class Trainer(object):
                             step in cb.schedule):
                         cb.run(sess, step)
                 # run train op
+#                 _, loss_value = sess.run([self._train_op, self._loss],
+#                                          feed_dict=self.context['feed_dict'], options=run_options, run_metadata=run_metadata)
                 _, loss_value = sess.run([self._train_op, self._loss],
-                                         feed_dict=self.context['feed_dict'], options=run_options, run_metadata=run_metadata)
+                                         feed_dict=self.context['feed_dict'])
                 # if nan, exist
                 assert not np.isnan(loss_value)
                 # log one
